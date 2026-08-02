@@ -1,0 +1,41 @@
+{% load static %}
+<article class="book-card">
+    <div class="book-cover-wrap">
+        <a href="{{ book.get_absolute_url }}" class="d-block w-100 h-100" aria-label="عرض {{ book.title }}">
+            {% if book.cover %}
+                <img class="book-cover" src="{{ book.cover.url }}" alt="{{ book.cover_alt }}" loading="lazy" width="320" height="480">
+            {% else %}
+                <span class="book-placeholder"><i class="bi bi-book"></i></span>
+            {% endif %}
+        </a>
+        <div class="book-badges">
+            {% if book.max_discount %}<span class="book-badge sale">خصم {{ book.max_discount }}٪</span>{% endif %}
+            {% if book.is_new %}<span class="book-badge new">جديد</span>{% endif %}
+            {% if book.is_bestseller %}<span class="book-badge">الأكثر مبيعًا</span>{% endif %}
+        </div>
+        <div class="book-quick-actions">
+            {% if request.user.is_authenticated %}
+            <form action="{% url 'store:wishlist_toggle' book.id %}" method="post" data-ajax-form>{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="icon-btn" type="submit" data-wishlist-button title="إضافة إلى المفضلة" aria-label="إضافة {{ book.title }} إلى المفضلة"><i class="bi bi-heart" data-wishlist-icon></i></button></form>
+            {% else %}
+            <a class="icon-btn" href="{% url 'store:login' %}?next={{ request.get_full_path|urlencode }}" title="سجل الدخول لاستخدام المفضلة" aria-label="تسجيل الدخول لاستخدام المفضلة"><i class="bi bi-heart"></i></a>
+            {% endif %}
+            <a class="icon-btn" href="{{ book.get_absolute_url }}" title="تفاصيل الكتاب" aria-label="تفاصيل {{ book.title }}"><i class="bi bi-eye"></i></a>
+        </div>
+    </div>
+    <div class="book-body">
+        <a class="book-category" href="{{ book.category.get_absolute_url }}">{{ book.category.name }}</a>
+        <a class="book-title" href="{{ book.get_absolute_url }}">{{ book.title }}</a>
+        <div class="book-authors">
+            {% for author in book.authors.all %}<a href="{{ author.get_absolute_url }}">{{ author.name }}</a>{% if not forloop.last %}، {% endif %}{% empty %}فريق الدار{% endfor %}
+        </div>
+        <div class="book-rating" aria-label="التقييم {{ book.average_rating }} من 5">
+            <span><i class="bi bi-star-fill"></i></span>
+            <strong>{{ book.average_rating|floatformat:1 }}</strong>
+            <small>({{ book.reviews.count }})</small>
+        </div>
+        <div class="book-card-footer">
+            <div class="book-price"><small>يبدأ من</small><strong>{{ book.starting_price|floatformat:0 }} ج.م</strong></div>
+            <form action="{% url 'store:cart_add' book.id %}" method="post" data-ajax-form>{% csrf_token %}<input type="hidden" name="format" value="{{ book.default_format }}"><input type="hidden" name="quantity" value="1"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button type="submit" class="card-cart-btn" aria-label="أضف {{ book.title }} إلى السلة" title="أضف إلى السلة"><i class="bi bi-bag-plus"></i></button></form>
+        </div>
+    </div>
+</article>

@@ -1,0 +1,228 @@
+{% load static %}
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{% block meta_description %}{{ site_settings.short_description }}{% endblock %}">
+    <meta name="theme-color" content="#123d32">
+    <title>{% block title %}{{ site_settings.site_name }}{% endblock %}</title>
+
+    <!-- إضافة الـ Favicon هنا -->
+    <link rel="shortcut icon" href="{% static 'images/logo.jpeg' %}" type="image/jpeg">
+    <link rel="icon" href="{% static 'images/logo.jpeg' %}" type="image/jpeg">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+    <script src="{% static 'js/theme-toggle.js' %}"></script>
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"Organization","name":"{{ site_settings.site_name|escapejs }}","email":"{{ site_settings.email|escapejs }}","telephone":"{{ site_settings.phone|escapejs }}"}
+    </script>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+<a class="skip-link" href="#main-content">انتقل إلى المحتوى</a>
+
+{% if site_settings.announcement %}
+<div class="announcement-bar">
+    <div class="container d-flex justify-content-center justify-content-lg-between align-items-center gap-3">
+        <p class="mb-0"><i class="bi bi-stars ms-2"></i>{{ site_settings.announcement }}</p>
+        <div class="d-none d-lg-flex gap-4 small">
+            <a href="{% url 'store:faq' %}"><i class="bi bi-truck ms-1"></i>الشحن والاستلام</a>
+            <a href="{% url 'store:author_application' %}"><i class="bi bi-pen ms-1"></i>انشر معنا</a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<header class="site-header sticky-top">
+    <div class="container py-3">
+        <div class="header-grid">
+            <a class="brand" href="{% url 'store:home' %}" aria-label="{{ site_settings.site_name }} — الرئيسية">
+                <!-- تم استبدال الحرف م بالصورة -->
+                <span class="brand-mark">
+                    <img src="{% static 'images/logo.jpeg' %}" alt="{{ site_settings.site_name }}" style="max-height: 40px; width: auto; object-fit: contain;">
+                </span>
+                <span class="brand-copy">
+                    <strong>{{ site_settings.site_name }}</strong>
+                    <small>{{ site_settings.tagline }}</small>
+                </span>
+            </a>
+
+            <div class="site-search position-relative d-none d-lg-block">
+                <form action="{% url 'store:book_list' %}" method="get" role="search">
+                    <i class="bi bi-search search-icon" aria-hidden="true"></i>
+                    <input type="search" name="q" value="{{ request.GET.q|default:'' }}" class="form-control" placeholder="ابحث بعنوان الكتاب أو المؤلف أو ISBN" autocomplete="off" data-search-input data-suggestions-url="{% url 'store:search_suggestions' %}" aria-label="البحث في الكتب">
+                    <button class="btn btn-brand" type="submit">بحث</button>
+                </form>
+                <div class="search-suggestions" data-search-suggestions hidden></div>
+            </div>
+
+            <div class="header-actions">
+                <div class="dropdown d-none d-md-block">
+                    <button class="header-action dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person"></i>
+                        <span>{% if request.user.is_authenticated %}{{ request.user.first_name|default:request.user.username }}{% else %}حسابي{% endif %}</span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end account-menu p-2">
+                        {% if request.user.is_authenticated %}
+                            <div class="account-welcome px-3 py-2">مرحبًا، <strong>{{ request.user.first_name|default:request.user.username }}</strong></div>
+                            <a class="dropdown-item" href="{% url 'store:my_orders' %}"><i class="bi bi-box-seam ms-2"></i>طلباتي</a>
+                            <a class="dropdown-item" href="{% url 'store:wishlist' %}"><i class="bi bi-heart ms-2"></i>المفضلة</a>
+                            {% if request.user.is_staff %}<a class="dropdown-item" href="/admin/"><i class="bi bi-speedometer2 ms-2"></i>لوحة الإدارة</a>{% endif %}
+                            <hr class="dropdown-divider">
+                            <form method="post" action="{% url 'store:logout' %}">{% csrf_token %}<button class="dropdown-item text-danger" type="submit"><i class="bi bi-box-arrow-right ms-2"></i>تسجيل الخروج</button></form>
+                        {% else %}
+                            <a class="dropdown-item" href="{% url 'store:login' %}"><i class="bi bi-box-arrow-in-left ms-2"></i>تسجيل الدخول</a>
+                            <a class="dropdown-item" href="{% url 'store:register' %}"><i class="bi bi-person-plus ms-2"></i>إنشاء حساب</a>
+                        {% endif %}
+                    </div>
+                </div>
+                <a class="header-action d-none d-sm-flex" href="{% url 'store:wishlist' %}" aria-label="المفضلة">
+                    <span class="action-icon"><i class="bi bi-heart"></i>{% if wishlist_count %}<b>{{ wishlist_count }}</b>{% endif %}</span>
+                    <span>المفضلة</span>
+                </a>
+                <a class="header-action" href="{% url 'store:cart' %}" aria-label="سلة المشتريات">
+                    <span class="action-icon"><i class="bi bi-bag"></i><b data-cart-count>{{ cart_count }}</b></span>
+                    <span class="d-none d-sm-inline">السلة</span>
+                </a>
+                <button class="theme-toggle" type="button" aria-label="تبديل إلى الوضع الداكن"><i class="bi bi-moon-fill"></i></button>
+                <button class="menu-toggle d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu" aria-controls="mobileMenu" aria-label="فتح القائمة"><i class="bi bi-list"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="main-nav d-none d-lg-block" aria-label="التنقل الرئيسي">
+        <div class="container">
+            <ul>
+                <li><a class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'store:home' %}">الرئيسية</a></li>
+                <li class="nav-mega-parent">
+                    <a class="{% if request.resolver_match.url_name == 'book_list' or request.resolver_match.url_name == 'book_detail' %}active{% endif %}" href="{% url 'store:book_list' %}">الكتب <i class="bi bi-chevron-down"></i></a>
+                    <div class="nav-mega">
+                        <div>
+                            <span class="mega-label">تصفح حسب المجال</span>
+                            <div class="mega-categories">
+                                {% for category in navigation_categories %}<a href="{{ category.get_absolute_url }}"><i class="bi {{ category.icon }}"></i>{{ category.name }}</a>{% empty %}<a href="{% url 'store:book_list' %}">كل الكتب</a>{% endfor %}
+                            </div>
+                        </div>
+                        <div class="mega-feature">
+                            <span>اختيارات المحررين</span>
+                            <strong>كتب منتقاة تصنع فرقًا</strong>
+                            <a href="{% url 'store:book_list' %}?sort=bestselling">اكتشف الأكثر مبيعًا <i class="bi bi-arrow-left"></i></a>
+                        </div>
+                    </div>
+                </li>
+                <li><a href="{% url 'store:book_list' %}?sort=newest">أحدث الإصدارات</a></li>
+                <li><a href="{% url 'store:book_list' %}?sort=bestselling">الأكثر مبيعًا</a></li>
+                <li><a class="{% if request.resolver_match.url_name == 'blog_list' %}active{% endif %}" href="{% url 'store:blog_list' %}">المجلة</a></li>
+                <li><a href="{% url 'store:event_list' %}">الفعاليات</a></li>
+                <li><a href="{% url 'store:author_application' %}">انشر معنا</a></li>
+                <li><a href="{% url 'store:about' %}">عن الدار</a></li>
+                <li><a href="{% url 'store:contact' %}">تواصل معنا</a></li>
+            </ul>
+        </div>
+    </nav>
+</header>
+
+<div class="offcanvas offcanvas-start" tabindex="-1" id="mobileMenu" aria-labelledby="mobileMenuLabel">
+    <div class="offcanvas-header">
+        <!-- تحديث اللوجو في قائمة الموبايل -->
+        <div class="brand">
+            <span class="brand-mark">
+                <img src="{% static 'images/logo.jpeg' %}" alt="{{ site_settings.site_name }}" style="max-height: 35px; width: auto; object-fit: contain;">
+            </span>
+            <span class="brand-copy"><strong id="mobileMenuLabel">{{ site_settings.site_name }}</strong><small>{{ site_settings.tagline }}</small></span>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="إغلاق"></button>
+    </div>
+    <div class="offcanvas-body">
+        <form class="mobile-search" action="{% url 'store:book_list' %}" method="get"><input class="form-control" type="search" name="q" placeholder="ابحث في الكتب"><button class="btn btn-brand"><i class="bi bi-search"></i></button></form>
+        <div class="mobile-nav">
+            <a href="{% url 'store:home' %}"><i class="bi bi-house"></i>الرئيسية</a>
+            <a href="{% url 'store:book_list' %}"><i class="bi bi-grid"></i>كل الكتب</a>
+            <a href="{% url 'store:book_list' %}?sort=newest"><i class="bi bi-stars"></i>أحدث الإصدارات</a>
+            <a href="{% url 'store:book_list' %}?sort=bestselling"><i class="bi bi-graph-up-arrow"></i>الأكثر مبيعًا</a>
+            <a href="{% url 'store:blog_list' %}"><i class="bi bi-journal-text"></i>المجلة</a>
+            <a href="{% url 'store:event_list' %}"><i class="bi bi-calendar-event"></i>الفعاليات</a>
+            <a href="{% url 'store:author_application' %}"><i class="bi bi-pen"></i>انشر معنا</a>
+            <a href="{% url 'store:contact' %}"><i class="bi bi-chat-dots"></i>تواصل معنا</a>
+        </div>
+        <div class="mobile-account mt-4">
+            {% if request.user.is_authenticated %}
+                <a class="btn btn-soft w-100 mb-2" href="{% url 'store:my_orders' %}">طلباتي</a>
+                <form method="post" action="{% url 'store:logout' %}">{% csrf_token %}<button class="btn btn-outline-danger w-100">تسجيل الخروج</button></form>
+            {% else %}
+                <a class="btn btn-brand w-100 mb-2" href="{% url 'store:login' %}">تسجيل الدخول</a>
+                <a class="btn btn-soft w-100" href="{% url 'store:register' %}">إنشاء حساب</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if messages %}
+<div class="messages-wrap" aria-live="polite">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="إغلاق"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<main id="main-content">{% block content %}{% endblock %}</main>
+
+<footer class="site-footer">
+    <div class="footer-newsletter">
+        <div class="container">
+            <div class="newsletter-box">
+                <div><span class="eyebrow light">رسالة واحدة تستحق القراءة</span><h2>ابقَ قريبًا من الكتب الجديدة</h2><p>إصدارات مختارة، فعاليات، وعروض خاصة دون رسائل مزعجة.</p></div>
+                <form method="post" action="{% url 'store:newsletter_subscribe' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><label class="visually-hidden" for="footer-email">البريد الإلكتروني</label><input id="footer-email" type="email" name="email" placeholder="name@example.com" required><button class="btn btn-gold" type="submit">اشترك الآن</button></form>
+            </div>
+        </div>
+    </div>
+    <div class="container footer-main">
+        <div class="footer-grid">
+            <div class="footer-about">
+                <!-- تحديث اللوجو في الفوتر -->
+                <a class="brand brand-light" href="{% url 'store:home' %}">
+                    <span class="brand-mark">
+                        <img src="{% static 'images/logo.jpeg' %}" alt="{{ site_settings.site_name }}" style="max-height: 40px; width: auto; object-fit: contain;">
+                    </span>
+                    <span class="brand-copy"><strong>{{ site_settings.site_name }}</strong><small>{{ site_settings.tagline }}</small></span>
+                </a>
+                <p>{{ site_settings.short_description }}</p>
+                <div class="social-links">
+                    {% if site_settings.facebook_url %}<a href="{{ site_settings.facebook_url }}" target="_blank" rel="noopener" aria-label="فيسبوك"><i class="bi bi-facebook"></i></a>{% endif %}
+                    {% if site_settings.instagram_url %}<a href="{{ site_settings.instagram_url }}" target="_blank" rel="noopener" aria-label="إنستجرام"><i class="bi bi-instagram"></i></a>{% endif %}
+                    {% if site_settings.whatsapp %}<a href="https://wa.me/{{ site_settings.whatsapp }}" target="_blank" rel="noopener" aria-label="واتساب"><i class="bi bi-whatsapp"></i></a>{% endif %}
+                </div>
+            </div>
+            <div><h3>استكشف</h3><a href="{% url 'store:book_list' %}">كل الكتب</a><a href="{% url 'store:book_list' %}?sort=newest">أحدث الإصدارات</a><a href="{% url 'store:book_list' %}?sort=bestselling">الأكثر مبيعًا</a><a href="{% url 'store:blog_list' %}">مجلة الدار</a></div>
+            <div><h3>خدماتنا</h3><a href="{% url 'store:author_application' %}">النشر مع الدار</a><a href="{% url 'store:academic_collaboration' %}">التعاون الأكاديمي</a><a href="{% url 'store:event_list' %}">الفعاليات</a><a href="{% url 'store:faq' %}">الأسئلة الشائعة</a></div>
+            <div><h3>المساعدة</h3><a href="{% url 'store:policy_page' 'purchase' %}">الشراء والاسترجاع</a><a href="{% url 'store:policy_page' 'privacy' %}">الخصوصية</a><a href="{% url 'store:policy_page' 'terms' %}">شروط الاستخدام</a><a href="{% url 'store:contact' %}">تواصل معنا</a></div>
+            <div class="footer-contact"><h3>تواصل</h3>{% if site_settings.address %}<p><i class="bi bi-geo-alt"></i><span>{{ site_settings.address }}</span></p>{% endif %}{% if site_settings.phone %}<a href="tel:{{ site_settings.phone }}"><i class="bi bi-telephone"></i>{{ site_settings.phone }}</a>{% endif %}{% if site_settings.email %}<a href="mailto:{{ site_settings.email }}"><i class="bi bi-envelope"></i>{{ site_settings.email }}</a>{% endif %}</div>
+        </div>
+        <div class="footer-bottom"><p>© {% now 'Y' %} {{ site_settings.site_name }}. جميع الحقوق محفوظة.</p><p>صُمم بعناية للقراء وصناع المعرفة.</p></div>
+    </div>
+</footer>
+
+<nav class="mobile-bottom-nav d-lg-none" aria-label="تنقل الهاتف">
+    <a href="{% url 'store:home' %}"><i class="bi bi-house"></i><span>الرئيسية</span></a>
+    <a href="{% url 'store:book_list' %}"><i class="bi bi-search"></i><span>اكتشف</span></a>
+    <a href="{% url 'store:wishlist' %}"><span class="position-relative"><i class="bi bi-heart"></i>{% if wishlist_count %}<b>{{ wishlist_count }}</b>{% endif %}</span><span>المفضلة</span></a>
+    <a href="{% url 'store:cart' %}"><span class="position-relative"><i class="bi bi-bag"></i><b data-cart-count>{{ cart_count }}</b></span><span>السلة</span></a>
+    <a href="{% if request.user.is_authenticated %}{% url 'store:my_orders' %}{% else %}{% url 'store:login' %}{% endif %}"><i class="bi bi-person"></i><span>حسابي</span></a>
+</nav>
+<button class="back-to-top" data-back-to-top aria-label="العودة إلى أعلى"><i class="bi bi-arrow-up"></i></button>
+<div class="site-toast" data-site-toast role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

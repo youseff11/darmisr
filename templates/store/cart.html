@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}سلة المشتريات | {{ site_settings.site_name }}{% endblock %}
+
+{% block content %}
+<section class="page-hero compact"><div class="container"><nav aria-label="مسار الصفحة"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="{% url 'store:home' %}">الرئيسية</a></li><li class="breadcrumb-item active">السلة</li></ol></nav><h1 class="display-title fs-2">سلة المشتريات</h1><p>راجع الكتب والصيغ والكميات قبل إتمام الطلب.</p></div></section>
+
+<section class="section-pad-sm">
+    <div class="container">
+        {% if cart_items %}
+        <div class="cart-layout">
+            <div class="cart-list">
+                {% for item in cart_items %}
+                <article class="cart-item">
+                    <a href="{{ item.book.get_absolute_url }}">{% if item.book.cover %}<img class="cart-item-cover" src="{{ item.book.cover.url }}" alt="{{ item.book.cover_alt }}">{% else %}<span class="cart-item-cover book-placeholder"><i class="bi bi-book"></i></span>{% endif %}</a>
+                    <div>
+                        <a href="{{ item.book.get_absolute_url }}"><h3>{{ item.book.title }}</h3></a>
+                        <div class="cart-item-meta">{{ item.format_label }} · {% for author in item.book.authors.all %}{{ author.name }}{% if not forloop.last %}، {% endif %}{% endfor %}</div>
+                        <div class="cart-actions">
+                            {% if item.format == 'physical' %}
+                            <form class="d-flex gap-2" action="{% url 'store:cart_update' item.key %}" method="post">{% csrf_token %}<div class="quantity-control" data-quantity-control><button type="button" data-step="-1" aria-label="تقليل">−</button><input type="number" name="quantity" min="0" max="{{ item.book.physical_stock }}" value="{{ item.quantity }}" aria-label="الكمية"><button type="button" data-step="1" aria-label="زيادة">+</button></div><button class="btn btn-soft btn-sm" type="submit">تحديث</button></form>
+                            {% else %}<span class="filter-chip"><i class="bi bi-file-earmark-lock"></i>ترخيص شخصي واحد</span>{% endif %}
+                            <form action="{% url 'store:cart_remove' item.key %}" method="post">{% csrf_token %}<button class="btn btn-link text-danger btn-sm" type="submit"><i class="bi bi-trash ms-1"></i>حذف</button></form>
+                        </div>
+                    </div>
+                    <div class="cart-line-total text-end"><small class="text-muted-custom d-block">{{ item.price|floatformat:0 }} ج.م × {{ item.quantity }}</small><strong class="text-brand fs-5">{{ item.line_total|floatformat:0 }} ج.م</strong></div>
+                </article>
+                {% endfor %}
+                <div><a class="link-arrow" href="{% url 'store:book_list' %}"><i class="bi bi-arrow-right"></i>متابعة التسوق</a></div>
+            </div>
+
+            <aside class="order-summary">
+                <h2>ملخص الطلب</h2>
+                <div class="summary-row"><span>المجموع الفرعي</span><strong>{{ subtotal|floatformat:0 }} ج.م</strong></div>
+                {% if discount %}<div class="summary-row text-success"><span>الخصم {% if coupon %}({{ coupon.code }}){% endif %}</span><strong>− {{ discount|floatformat:0 }} ج.م</strong></div>{% endif %}
+                <div class="summary-row"><span>الشحن</span><strong>{% if shipping %}{{ shipping|floatformat:0 }} ج.م{% else %}مجاني{% endif %}</strong></div>
+                <div class="summary-row total"><span>الإجمالي</span><strong>{{ total|floatformat:0 }} ج.م</strong></div>
+
+                {% if free_shipping_remaining %}<div class="shipping-progress"><p class="mb-2"><i class="bi bi-truck ms-1"></i>أضف كتبًا بقيمة <strong>{{ free_shipping_remaining|floatformat:0 }} ج.م</strong> لتحصل على شحن مجاني.</p><div class="progress" role="progressbar"><div class="progress-bar" style="width: 62%"></div></div></div>{% elif cart_items %}<p class="small text-success mt-3 mb-0"><i class="bi bi-check-circle ms-1"></i>طلبك مؤهل للشحن المجاني.</p>{% endif %}
+
+                <div class="coupon-box">
+                    {% if coupon %}
+                    <div class="d-flex justify-content-between align-items-center"><span><i class="bi bi-ticket-perforated ms-1"></i>{{ coupon.code }}</span><form method="post" action="{% url 'store:remove_coupon' %}">{% csrf_token %}<button class="btn btn-link text-danger p-0" type="submit">إلغاء</button></form></div>
+                    {% else %}
+                    <form method="post" action="{% url 'store:apply_coupon' %}">{% csrf_token %}<label class="visually-hidden" for="coupon-code">كود الخصم</label><input id="coupon-code" class="form-control" type="text" name="code" placeholder="لديك كود خصم؟" required><button class="btn btn-brand" type="submit">تطبيق</button></form>
+                    {% endif %}
+                </div>
+                <a class="btn btn-brand btn-lg w-100" href="{% url 'store:checkout' %}">إتمام الطلب <i class="bi bi-arrow-left me-2"></i></a>
+                <div class="text-center text-muted-custom small mt-3"><i class="bi bi-shield-lock ms-1"></i>بياناتك محمية أثناء إتمام الطلب</div>
+            </aside>
+        </div>
+        {% else %}
+        <div class="empty-state"><i class="bi bi-bag"></i><h2 class="h4">سلتك تنتظر كتابًا جيدًا</h2><p class="text-muted-custom">تصفح مكتبتنا واختر النسخة الورقية أو الإلكترونية المناسبة لك.</p><a class="btn btn-brand btn-lg" href="{% url 'store:book_list' %}">استكشف الكتب</a></div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

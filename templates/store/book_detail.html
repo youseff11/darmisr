@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ book.title }} | {{ site_settings.site_name }}{% endblock %}
+{% block meta_description %}{{ book.short_description|default:book.description|truncatewords:28 }}{% endblock %}
+
+{% block content %}
+<section class="page-hero compact">
+    <div class="container">
+        <nav aria-label="مسار الصفحة"><ol class="breadcrumb mb-0"><li class="breadcrumb-item"><a href="{% url 'store:home' %}">الرئيسية</a></li><li class="breadcrumb-item"><a href="{% url 'store:book_list' %}">الكتب</a></li><li class="breadcrumb-item"><a href="{{ book.category.get_absolute_url }}">{{ book.category.name }}</a></li><li class="breadcrumb-item active" aria-current="page">{{ book.title|truncatechars:45 }}</li></ol></nav>
+    </div>
+</section>
+
+<section class="section-pad-sm">
+    <div class="container">
+        <div class="product-layout">
+            <div class="product-gallery">
+                <div class="product-thumbs">
+                    {% if book.cover %}<button class="product-thumb active" type="button"><img src="{{ book.cover.url }}" alt="" data-gallery-thumb="{{ book.cover.url }}" data-gallery-alt="{{ book.cover_alt }}"></button>{% endif %}
+                    {% for image in book.images.all %}<button class="product-thumb" type="button"><img src="{{ image.image.url }}" alt="" data-gallery-thumb="{{ image.image.url }}" data-gallery-alt="{{ image.alt_text|default:book.title }}"></button>{% endfor %}
+                </div>
+                <div class="product-main-image">
+                    {% if book.cover %}<img src="{{ book.cover.url }}" alt="{{ book.cover_alt }}" data-gallery-main width="520" height="780">{% else %}<span class="book-placeholder"><i class="bi bi-book"></i></span>{% endif %}
+                    <div class="book-badges">{% if book.max_discount %}<span class="book-badge sale">وفر حتى {{ book.max_discount }}٪</span>{% endif %}{% if book.is_new %}<span class="book-badge new">إصدار جديد</span>{% endif %}</div>
+                </div>
+            </div>
+
+            <div class="product-info">
+                <a class="book-category" href="{{ book.category.get_absolute_url }}">{{ book.category.name }}</a>
+                <h1>{{ book.title }}</h1>
+                {% if book.subtitle %}<p class="product-subtitle">{{ book.subtitle }}</p>{% endif %}
+                <p class="product-author">تأليف: {% for author in book.authors.all %}<a href="{{ author.get_absolute_url }}">{{ author.name }}</a>{% if not forloop.last %}، {% endif %}{% endfor %}</p>
+                <div class="product-rating-row"><span class="stars" aria-hidden="true"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i></span><strong>{{ book.average_rating|floatformat:1 }}</strong><a href="#reviews">{{ reviews.count }} تقييم</a><span class="text-muted-custom">·</span><span class="text-muted-custom">ISBN: <bdi>{{ book.isbn }}</bdi></span></div>
+                {% if book.short_description %}<p class="product-description">{{ book.short_description }}</p>{% endif %}
+
+                <form action="{% url 'store:cart_add' book.id %}" method="post" data-product-purchase data-ajax-form>
+                    {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <div class="format-picker" data-format-picker>
+                        <h2 class="h6 mb-3">اختر صيغة الكتاب</h2>
+                        <div class="format-options">
+                            {% if book.has_physical %}
+                            <div class="format-option"><input id="format-physical" type="radio" name="format" value="physical" data-price="{{ book.physical_price|floatformat:0 }}" data-old-price="{% if book.physical_old_price %}{{ book.physical_old_price|floatformat:0 }}{% endif %}" {% if selected_format == 'physical' %}checked{% endif %} {% if not book.physical_stock %}disabled{% endif %}><label for="format-physical"><strong><i class="bi bi-book ms-1"></i>نسخة ورقية</strong><small>{% if book.physical_stock %}متاحة للشحن · {{ book.physical_stock }} بالمخزون{% else %}نفدت مؤقتًا{% endif %}</small><span class="format-price">{{ book.physical_price|floatformat:0 }} ج.م {% if book.physical_old_price %}<del class="text-muted small me-1">{{ book.physical_old_price|floatformat:0 }}</del>{% endif %}</span></label></div>
+                            {% endif %}
+                            {% if book.has_digital %}
+                            <div class="format-option"><input id="format-digital" type="radio" name="format" value="digital" data-price="{{ book.digital_price|floatformat:0 }}" data-old-price="{% if book.digital_old_price %}{{ book.digital_old_price|floatformat:0 }}{% endif %}" {% if selected_format == 'digital' %}checked{% endif %}><label for="format-digital"><strong><i class="bi bi-tablet ms-1"></i>نسخة إلكترونية</strong><small>وصول محمي بعد تأكيد الدفع</small><span class="format-price">{{ book.digital_price|floatformat:0 }} ج.م {% if book.digital_old_price %}<del class="text-muted small me-1">{{ book.digital_old_price|floatformat:0 }}</del>{% endif %}</span></label></div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-baseline gap-2 mb-2"><span class="text-muted-custom">السعر المختار</span><strong class="fs-4 text-brand" data-product-price>{{ selected_price|floatformat:0 }} ج.م</strong><del class="text-muted" data-product-old-price {% if not selected_old_price %}hidden{% endif %}>{% if selected_old_price %}{{ selected_old_price|floatformat:0 }} ج.م{% endif %}</del></div>
+                    <div class="purchase-row two">
+                        <div class="quantity-control {% if selected_format == 'digital' %}opacity-50{% endif %}" data-quantity-control><button type="button" data-step="-1" aria-label="تقليل الكمية">−</button><input type="number" name="quantity" min="1" max="{{ book.physical_stock|default:1 }}" value="1" aria-label="الكمية" {% if selected_format == 'digital' %}disabled{% endif %}><button type="button" data-step="1" aria-label="زيادة الكمية">+</button></div>
+                        <button class="btn btn-brand btn-lg" type="submit"><i class="bi bi-bag-plus ms-2"></i>أضف إلى السلة</button>
+                    </div>
+                </form>
+
+                {% if request.user.is_authenticated %}
+                <form class="mt-2" action="{% url 'store:wishlist_toggle' book.id %}" method="post" data-ajax-form>{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-soft w-100 {% if in_wishlist %}active{% endif %}" type="submit" data-wishlist-button><i class="bi {% if in_wishlist %}bi-heart-fill{% else %}bi-heart{% endif %} ms-2" data-wishlist-icon></i>{% if in_wishlist %}محفوظ في المفضلة{% else %}أضف إلى المفضلة{% endif %}</button></form>
+                {% else %}<a class="btn btn-soft w-100 mt-2" href="{% url 'store:login' %}?next={{ request.path|urlencode }}"><i class="bi bi-heart ms-2"></i>سجّل الدخول لحفظ الكتاب</a>{% endif %}
+
+                {% if book.sample_file or book.sample_url %}<a class="btn btn-outline-brand w-100 mt-2" href="{% if book.sample_file %}{{ book.sample_file.url }}{% else %}{{ book.sample_url }}{% endif %}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-text ms-2"></i>تصفح الفهرس أو اقرأ عينة</a>{% endif %}
+
+                <div class="product-assurances"><div class="assurance"><i class="bi bi-truck"></i><span>شحن سريع وآمن</span></div><div class="assurance"><i class="bi bi-arrow-repeat"></i><span>سياسة استرجاع واضحة</span></div><div class="assurance"><i class="bi bi-shield-lock"></i><span>شراء وملفات محمية</span></div></div>
+            </div>
+        </div>
+
+        <div class="product-tabs">
+            <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#description" type="button">عن الكتاب</button></li><li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#specs" type="button">المواصفات</button></li><li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#reviews" type="button">آراء القراء ({{ reviews.count }})</button></li></ul>
+            <div class="tab-content">
+                <div class="tab-pane fade show active prose" id="description">{{ book.description|default:book.short_description|linebreaks }}</div>
+                <div class="tab-pane fade" id="specs"><div class="spec-table"><div class="spec-item"><span>ISBN</span><strong><bdi>{{ book.isbn }}</bdi></strong></div><div class="spec-item"><span>سنة النشر</span><strong>{{ book.publication_year }}</strong></div><div class="spec-item"><span>عدد الصفحات</span><strong>{{ book.pages }}</strong></div><div class="spec-item"><span>الطبعة</span><strong>{{ book.edition|default:'الأولى' }}</strong></div><div class="spec-item"><span>نوع الغلاف</span><strong>{{ book.get_binding_display }}</strong></div><div class="spec-item"><span>المقاس</span><strong>{{ book.dimensions }}</strong></div><div class="spec-item"><span>اللغة</span><strong>{{ book.language }}</strong></div><div class="spec-item"><span>التصنيف</span><strong>{{ book.category.name }}</strong></div></div></div>
+                <div class="tab-pane fade" id="reviews">
+                    <div class="row g-5"><div class="col-lg-7">{% for review in reviews %}<article class="review-item"><div class="review-head"><div><strong>{{ review.user.first_name|default:review.user.username }}</strong><div class="stars">{% for i in '12345' %}<i class="bi {% if forloop.counter <= review.rating %}bi-star-fill{% else %}bi-star{% endif %}"></i>{% endfor %}</div></div><small class="text-muted-custom">{{ review.created_at|date:'j F Y' }}</small></div><p class="mb-0">{{ review.comment }}</p></article>{% empty %}<div class="empty-state py-5"><i class="bi bi-chat-square-heart"></i><h3 class="h6">كن أول من يشارك رأيه</h3></div>{% endfor %}</div><div class="col-lg-5"><div class="form-card"><h2>اكتب تقييمك</h2>{% if request.user.is_authenticated %}<form method="post" action="{% url 'store:add_review' book.slug %}">{% csrf_token %}{% for field in review_form %}<div class="mb-3"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>{% endfor %}<button class="btn btn-brand" type="submit">حفظ التقييم</button></form>{% else %}<p class="text-muted-custom">سجّل الدخول لمشاركة رأيك مع القراء.</p><a class="btn btn-brand" href="{% url 'store:login' %}?next={{ request.path|urlencode }}">تسجيل الدخول</a>{% endif %}</div></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if related_books %}<section class="section-pad bg-cream"><div class="container"><div class="section-heading"><div><span class="eyebrow">قد يعجبك أيضًا</span><h2 class="section-title">كتب في المجال نفسه</h2></div></div><div class="book-grid">{% for related_book in related_books %}{% include 'store/_book_card.html' with book=related_book %}{% endfor %}</div></div></section>{% endif %}
+{% endblock %}

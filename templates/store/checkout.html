@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}إتمام الطلب | {{ site_settings.site_name }}{% endblock %}
+
+{% block content %}
+<section class="page-hero compact"><div class="container"><nav aria-label="مسار الصفحة"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="{% url 'store:home' %}">الرئيسية</a></li><li class="breadcrumb-item"><a href="{% url 'store:cart' %}">السلة</a></li><li class="breadcrumb-item active">إتمام الطلب</li></ol></nav><h1 class="display-title fs-2">إتمام الطلب</h1><p>أدخل بيانات صحيحة لضمان وصول الكتب وتأكيد النسخ الإلكترونية.</p></div></section>
+
+<section class="section-pad-sm">
+    <div class="container">
+        <form method="post" novalidate>{% csrf_token %}
+            <div class="checkout-layout">
+                <div>
+                    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+                    <div class="form-card">
+                        <h2><span class="badge rounded-pill text-bg-success ms-2">1</span>بيانات التواصل</h2>
+                        <div class="row g-3">
+                            {% for field in form %}{% if field.name == 'full_name' or field.name == 'email' or field.name == 'phone' %}<div class="{% if field.name == 'full_name' %}col-12{% else %}col-md-6{% endif %}"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>{% endif %}{% endfor %}
+                        </div>
+                    </div>
+                    <div class="form-card">
+                        <h2><span class="badge rounded-pill text-bg-success ms-2">2</span>عنوان الشحن</h2>
+                        <div class="row g-3">
+                            {% for field in form %}{% if field.name == 'country' or field.name == 'governorate' or field.name == 'city' or field.name == 'address_line' or field.name == 'postal_code' %}<div class="{% if field.name == 'address_line' %}col-12{% elif field.name == 'postal_code' %}col-md-4{% else %}col-md-6{% endif %}"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>{% endif %}{% endfor %}
+                        </div>
+                        {% if not shipping %}<p class="small text-success mt-3 mb-0"><i class="bi bi-truck ms-1"></i>هذا الطلب مؤهل للشحن المجاني، أو يحتوي على نسخ إلكترونية فقط.</p>{% endif %}
+                    </div>
+                    <div class="form-card">
+                        <h2><span class="badge rounded-pill text-bg-success ms-2">3</span>طريقة الدفع</h2>
+                        {{ form.payment_method }}{{ form.payment_method.errors }}
+                        <div class="alert alert-light border small mt-3 mb-0"><i class="bi bi-info-circle ms-1"></i>الدفع عند الاستلام متاح للنسخ الورقية. التحويل والمحفظة يُراجعان يدويًا قبل إتاحة التنزيل الإلكتروني.</div>
+                    </div>
+                    <div class="form-card">
+                        <h2>ملاحظات الطلب <span class="text-muted small">(اختياري)</span></h2>
+                        {{ form.notes }}{{ form.notes.errors }}
+                    </div>
+                </div>
+
+                <aside class="order-summary">
+                    <h2>مراجعة طلبك</h2>
+                    <div class="d-grid gap-3 mb-3">
+                        {% for item in cart_items %}<div class="d-flex gap-3 align-items-center"><div class="position-relative">{% if item.book.cover %}<img src="{{ item.book.cover.url }}" alt="" style="width:52px;aspect-ratio:2/3;object-fit:cover;border-radius:4px">{% else %}<span class="book-placeholder" style="width:52px;aspect-ratio:2/3"><i class="bi bi-book"></i></span>{% endif %}<span class="badge rounded-pill bg-dark position-absolute top-0 start-0 translate-middle">{{ item.quantity }}</span></div><div class="flex-grow-1 min-w-0"><strong class="d-block small">{{ item.book.title|truncatechars:40 }}</strong><small class="text-muted-custom">{{ item.format_label }}</small></div><strong class="small text-nowrap">{{ item.line_total|floatformat:0 }} ج.م</strong></div>{% endfor %}
+                    </div>
+                    <hr>
+                    <div class="summary-row"><span>المجموع الفرعي</span><strong>{{ subtotal|floatformat:0 }} ج.م</strong></div>
+                    {% if discount %}<div class="summary-row text-success"><span>الخصم</span><strong>− {{ discount|floatformat:0 }} ج.م</strong></div>{% endif %}
+                    <div class="summary-row"><span>الشحن</span><strong>{% if shipping %}{{ shipping|floatformat:0 }} ج.م{% else %}مجاني{% endif %}</strong></div>
+                    <div class="summary-row total"><span>الإجمالي</span><strong>{{ total|floatformat:0 }} ج.م</strong></div>
+                    <button class="btn btn-brand btn-lg w-100 mt-3" type="submit">تأكيد الطلب <i class="bi bi-check2-circle me-2"></i></button>
+                    <p class="text-muted-custom small text-center mt-3 mb-0">بتأكيد الطلب أنت توافق على <a class="text-brand" href="{% url 'store:policy_page' 'terms' %}" target="_blank">شروط الاستخدام</a> و<a class="text-brand" href="{% url 'store:policy_page' 'purchase' %}" target="_blank">سياسة الشراء</a>.</p>
+                </aside>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

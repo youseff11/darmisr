@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+
+{% block title %}الصفحة غير موجودة | {{ site_settings.site_name }}{% endblock %}
+
+{% block content %}
+<section class="section-pad bg-cream"><div class="container"><div class="empty-state"><span class="display-title text-brand" style="font-size:6rem;line-height:1">404</span><h1 class="h3 mt-3">هذه الصفحة خرجت من الفهرس</h1><p class="text-muted-custom">ربما تغيّر الرابط أو لم تعد الصفحة متاحة. يمكنك البحث عن كتاب أو العودة إلى المكتبة.</p><form class="site-search mx-auto mb-3" style="max-width:520px" action="{% url 'store:book_list' %}" method="get"><label class="visually-hidden" for="error-search">ابحث عن كتاب</label><input id="error-search" type="search" name="q" placeholder="عنوان الكتاب أو اسم المؤلف"><button type="submit"><i class="bi bi-search"></i></button></form><div class="d-flex justify-content-center gap-2"><a class="btn btn-brand" href="{% url 'store:home' %}">الرئيسية</a><a class="btn btn-outline-brand" href="{% url 'store:book_list' %}">كل الكتب</a></div></div></div></section>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load store_tags %}
+
+{% block title %}مكتبة الكتب | {{ site_settings.site_name }}{% endblock %}
+{% block meta_description %}تصفح جميع كتب {{ site_settings.site_name }} وابحث حسب العنوان أو المؤلف أو التصنيف، مع نسخ ورقية وإلكترونية.{% endblock %}
+
+{% block content %}
+<section class="page-hero compact">
+    <div class="container">
+        <nav aria-label="مسار الصفحة"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="{% url 'store:home' %}">الرئيسية</a></li><li class="breadcrumb-item active">الكتب</li></ol></nav>
+        <h1 class="display-title fs-2">مكتبة دار مصر</h1>
+        <p>ابحث بين الإصدارات الورقية والإلكترونية واختر الكتاب الذي يناسب رحلتك.</p>
+    </div>
+</section>
+
+<section class="section-pad-sm">
+    <div class="container">
+        <div class="catalog-layout">
+            <aside class="filter-panel" data-filter-panel aria-label="مرشحات الكتب">
+                <form method="get" action="{% url 'store:book_list' %}">
+                    <div class="filter-group">
+                        <h3>ابحث في المكتبة</h3>
+                        <label class="visually-hidden" for="catalog-search">كلمة البحث</label>
+                        <input id="catalog-search" class="form-control" type="search" name="q" value="{{ filters.q }}" placeholder="عنوان، مؤلف أو ISBN">
+                    </div>
+                    <div class="filter-group">
+                        <h3>التصنيف</h3>
+                        <select class="form-select" name="category" aria-label="التصنيف">
+                            <option value="">كل التصنيفات</option>
+                            {% for category in categories %}<option value="{{ category.slug }}" {% if filters.category == category.slug %}selected{% endif %}>{{ category.name }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <h3>المؤلف</h3>
+                        <select class="form-select" name="author" aria-label="المؤلف">
+                            <option value="">كل المؤلفين</option>
+                            {% for author in authors %}<option value="{{ author.slug }}" {% if filters.author == author.slug %}selected{% endif %}>{{ author.name }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <h3>سنة النشر</h3>
+                        <select class="form-select" name="year" aria-label="سنة النشر"><option value="">كل السنوات</option>{% for item in years %}<option value="{{ item }}" {% if filters.year == item|stringformat:'s' %}selected{% endif %}>{{ item }}</option>{% endfor %}</select>
+                    </div>
+                    <div class="filter-group">
+                        <h3>صيغة الكتاب</h3>
+                        <div class="filter-list">
+                            <label class="form-check"><input class="form-check-input" type="radio" name="format" value="" {% if not filters.format %}checked{% endif %}> <span class="form-check-label">جميع الصيغ</span></label>
+                            <label class="form-check"><input class="form-check-input" type="radio" name="format" value="physical" {% if filters.format == 'physical' %}checked{% endif %}> <span class="form-check-label">نسخة ورقية</span></label>
+                            <label class="form-check"><input class="form-check-input" type="radio" name="format" value="digital" {% if filters.format == 'digital' %}checked{% endif %}> <span class="form-check-label">نسخة إلكترونية</span></label>
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <h3>التوفر</h3>
+                        <select class="form-select" name="availability"><option value="">الكل</option><option value="in_stock" {% if filters.availability == 'in_stock' %}selected{% endif %}>متوفر للشحن</option><option value="digital" {% if filters.availability == 'digital' %}selected{% endif %}>تحميل إلكتروني</option></select>
+                    </div>
+                    <div class="filter-group">
+                        <h3>نطاق السعر</h3>
+                        <div class="row g-2"><div class="col-6"><label class="visually-hidden" for="min-price">من</label><input id="min-price" class="form-control" type="number" min="0" step="1" name="min_price" value="{{ filters.min_price }}" placeholder="من"></div><div class="col-6"><label class="visually-hidden" for="max-price">إلى</label><input id="max-price" class="form-control" type="number" min="0" step="1" name="max_price" value="{{ filters.max_price }}" placeholder="إلى"></div></div>
+                    </div>
+                    <input type="hidden" name="sort" value="{{ filters.sort }}">
+                    <button class="btn btn-brand w-100 mt-3" type="submit">تطبيق المرشحات</button>
+                    <a class="btn btn-link text-muted w-100 mt-1" href="{% url 'store:book_list' %}">إعادة الضبط</a>
+                </form>
+            </aside>
+
+            <div>
+                <div class="catalog-toolbar">
+                    <div class="d-flex align-items-center justify-content-between gap-2"><button class="btn btn-soft d-lg-none" type="button" data-filter-toggle><i class="bi bi-sliders ms-1"></i>المرشحات</button><span><strong>{{ total_results }}</strong> نتيجة</span></div>
+                    <form method="get" class="d-flex align-items-center gap-2">
+                        {% for key, value in request.GET.items %}{% if key != 'sort' and key != 'page' %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endif %}{% endfor %}
+                        <label for="sort-books" class="text-muted-custom small text-nowrap">ترتيب حسب</label>
+                        <select id="sort-books" class="form-select" name="sort" onchange="this.form.submit()">
+                            <option value="newest" {% if filters.sort == 'newest' %}selected{% endif %}>الأحدث</option>
+                            <option value="bestselling" {% if filters.sort == 'bestselling' %}selected{% endif %}>الأكثر مبيعًا</option>
+                            <option value="rating" {% if filters.sort == 'rating' %}selected{% endif %}>الأعلى تقييمًا</option>
+                            <option value="price_low" {% if filters.sort == 'price_low' %}selected{% endif %}>السعر: الأقل أولًا</option>
+                            <option value="price_high" {% if filters.sort == 'price_high' %}selected{% endif %}>السعر: الأعلى أولًا</option>
+                            <option value="title" {% if filters.sort == 'title' %}selected{% endif %}>العنوان أبجديًا</option>
+                        </select>
+                    </form>
+                </div>
+
+                {% if filters.q or filters.category or filters.author or filters.year or filters.format or filters.min_price or filters.max_price %}
+                <div class="active-filters"><span class="small text-muted-custom ms-1">المرشحات النشطة:</span>{% if filters.q %}<span class="filter-chip">بحث: {{ filters.q }}</span>{% endif %}{% if filters.category %}<span class="filter-chip">تصنيف محدد</span>{% endif %}{% if filters.author %}<span class="filter-chip">مؤلف محدد</span>{% endif %}{% if filters.year %}<span class="filter-chip">{{ filters.year }}</span>{% endif %}{% if filters.format %}<span class="filter-chip">{% if filters.format == 'digital' %}إلكتروني{% else %}ورقي{% endif %}</span>{% endif %}<a class="filter-chip" href="{% url 'store:book_list' %}"><i class="bi bi-x-lg"></i>مسح الكل</a></div>
+                {% endif %}
+
+                {% if page_obj %}
+                <div class="book-grid">{% for book in page_obj %}{% include 'store/_book_card.html' with book=book %}{% endfor %}</div>
+                {% else %}
+                <div class="empty-state"><i class="bi bi-search"></i><h2 class="h5">لم نعثر على كتب مطابقة</h2><p class="text-muted-custom">جرّب كلمة بحث أبسط أو احذف بعض المرشحات.</p><a class="btn btn-brand" href="{% url 'store:book_list' %}">عرض جميع الكتب</a></div>
+                {% endif %}
+
+                {% if page_obj.paginator.num_pages > 1 %}
+                <nav class="mt-5" aria-label="صفحات النتائج"><ul class="pagination justify-content-center flex-wrap">
+                    {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?{% query_transform page=page_obj.previous_page_number %}" aria-label="السابق"><i class="bi bi-chevron-right"></i></a></li>{% endif %}
+                    {% for number in page_obj.paginator.page_range %}{% if number == page_obj.number %}<li class="page-item active"><span class="page-link">{{ number }}</span></li>{% elif number >= page_obj.number|add:'-2' and number <= page_obj.number|add:'2' %}<li class="page-item"><a class="page-link" href="?{% query_transform page=number %}">{{ number }}</a></li>{% endif %}{% endfor %}
+                    {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?{% query_transform page=page_obj.next_page_number %}" aria-label="التالي"><i class="bi bi-chevron-left"></i></a></li>{% endif %}
+                </ul></nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

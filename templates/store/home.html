@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ site_settings.site_name }} | كتب تصنع معرفة تبقى{% endblock %}
+{% block meta_description %}اكتشف إصدارات {{ site_settings.site_name }} الورقية والإلكترونية، وتصفح أحدث الكتب والأكثر مبيعًا في تجربة شراء عربية موثوقة.{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-media"><img src="{% static 'images/hero.png' %}" alt="مكتبة عربية معاصرة من إصدارات دار مصر" fetchpriority="high"></div>
+    <div class="container">
+        <div class="hero-content">
+            <span class="eyebrow light">دار نشر عربية مستقلة</span>
+            <h1 class="display-title">نختار الفكرة بعناية،<br>ونصنع منها كتابًا يبقى.</h1>
+            <p>إصدارات رصينة تجمع بين أصالة المعرفة وجودة الصناعة؛ متاحة في نسخ ورقية تصل إلى بابك ونسخ إلكترونية ترافقك أينما كنت.</p>
+            <div class="hero-actions">
+                <a class="btn btn-gold btn-lg" href="{% url 'store:book_list' %}">اكتشف مكتبتنا <i class="bi bi-arrow-left me-2"></i></a>
+                <a class="btn btn-outline-light btn-lg" href="{% url 'store:author_application' %}">لديك كتاب؟ انشر معنا</a>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat"><strong>{{ book_count }}+</strong><span>عنوان مختار</span></div>
+                <div class="hero-stat"><strong>{{ author_count }}+</strong><span>مؤلف وباحث</span></div>
+                <div class="hero-stat"><strong>{{ category_count }}</strong><span>مجالات معرفية</span></div>
+            </div>
+        </div>
+    </div>
+    <span class="hero-scroll">مرّر للاكتشاف</span>
+</section>
+
+<div class="trust-strip">
+    <div class="container">
+        <div class="trust-grid">
+            <div class="trust-item"><i class="bi bi-truck"></i><div><strong>شحن موثوق</strong><small>إلى جميع المحافظات</small></div></div>
+            <div class="trust-item"><i class="bi bi-shield-check"></i><div><strong>دفع آمن</strong><small>خيارات مرنة عند الطلب</small></div></div>
+            <div class="trust-item"><i class="bi bi-file-earmark-arrow-down"></i><div><strong>نسخ إلكترونية</strong><small>وصول محمي بعد الدفع</small></div></div>
+            <div class="trust-item"><i class="bi bi-headset"></i><div><strong>دعم حقيقي</strong><small>فريقنا قريب منك</small></div></div>
+        </div>
+    </div>
+</div>
+
+<section class="section-pad">
+    <div class="container">
+        <div class="section-heading">
+            <div><span class="eyebrow">اختر مجالك</span><h2 class="section-title">مكتبة مرتبة حول اهتماماتك</h2><p>انتقل مباشرة إلى المجال الذي تبحث عنه، من الدراسات القانونية إلى الفكر والإدارة والتراث.</p></div>
+            <a class="link-arrow" href="{% url 'store:book_list' %}">كل التصنيفات <i class="bi bi-arrow-left"></i></a>
+        </div>
+        <div class="category-grid">
+            {% for category in categories %}
+            <a class="category-card" href="{{ category.get_absolute_url }}">
+                <i class="bi {{ category.icon }}"></i>
+                <div><strong>{{ category.name }}</strong><small class="d-block">{{ category.book_count }} كتاب</small></div>
+            </a>
+            {% empty %}
+            <a class="category-card" href="{% url 'store:book_list' %}"><i class="bi bi-grid"></i><div><strong>كل الكتب</strong><small class="d-block">ابدأ التصفح</small></div></a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{% if featured_books %}
+<section class="section-pad bg-cream">
+    <div class="container">
+        <div class="section-heading">
+            <div><span class="eyebrow">اختيارات المحررين</span><h2 class="section-title">كتب تستحق أن تبدأ بها</h2><p>عناوين اخترناها لقيمتها المعرفية وجودة تناولها واهتمام القراء بها.</p></div>
+            <a class="link-arrow" href="{% url 'store:book_list' %}?sort=rating">شاهد المجموعة <i class="bi bi-arrow-left"></i></a>
+        </div>
+        <div class="book-grid">{% for book in featured_books %}{% include 'store/_book_card.html' with book=book %}{% endfor %}</div>
+    </div>
+</section>
+{% endif %}
+
+<section class="section-pad promo-section">
+    <div class="container">
+        <div class="promo-panel">
+            <div class="promo-copy">
+                <span class="eyebrow light">رحلة المؤلف تبدأ هنا</span>
+                <h2 class="section-title">من المخطوط إلى كتاب يليق بفكرتك</h2>
+                <p>نرافقك في المراجعة والتحرير والتصميم والطباعة والتوزيع، ضمن عملية واضحة تحافظ على صوتك وتمنح عملك أفضل فرصة للوصول.</p>
+                <div class="metric-row"><div><strong>4</strong><span>مراحل مراجعة</span></div><div><strong>360°</strong><span>خدمة نشر متكاملة</span></div><div><strong>15 يومًا</strong><span>رد مبدئي</span></div></div>
+                <div><a class="btn btn-gold" href="{% url 'store:author_application' %}">أرسل مشروعك للنشر</a> <a class="btn btn-link text-white" href="{% url 'store:policy_page' 'publishing' %}">اعرف الشروط</a></div>
+            </div>
+            <div class="promo-image"><img src="{% static 'images/author-writing.jpg' %}" alt="مؤلف يعمل على مخطوط كتاب" loading="lazy"></div>
+        </div>
+    </div>
+</section>
+
+{% if new_books %}
+<section class="section-pad">
+    <div class="container">
+        <div class="section-heading"><div><span class="eyebrow">وصل حديثًا</span><h2 class="section-title">أحدث الإصدارات</h2><p>كتب جديدة تفتح أسئلة مختلفة وتضيف إلى مكتبتك معرفة عملية وعميقة.</p></div><a class="link-arrow" href="{% url 'store:book_list' %}?sort=newest">كل الجديد <i class="bi bi-arrow-left"></i></a></div>
+        <div class="book-grid">{% for book in new_books %}{% include 'store/_book_card.html' with book=book %}{% endfor %}</div>
+    </div>
+</section>
+{% endif %}
+
+{% if featured_authors %}
+<section class="section-pad bg-cream">
+    <div class="container">
+        <div class="section-heading"><div><span class="eyebrow">أصوات الدار</span><h2 class="section-title">تعرف إلى مؤلفينا</h2><p>باحثون وخبراء وكتاب يضعون خبراتهم بين يدي القارئ بوضوح وعمق.</p></div></div>
+        <div class="author-grid">
+            {% for author in featured_authors %}
+            <a class="author-card" href="{{ author.get_absolute_url }}">
+                <div class="author-avatar">{% if author.photo %}<img src="{{ author.photo.url }}" alt="{{ author.name }}" loading="lazy">{% else %}<span class="author-avatar-placeholder"><i class="bi bi-person"></i></span>{% endif %}</div>
+                <h3>{{ author.name }}</h3><small>{{ author.nationality|default:'كاتب وباحث' }}</small>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if bestsellers %}
+<section class="section-pad">
+    <div class="container">
+        <div class="section-heading"><div><span class="eyebrow">اختيار القرّاء</span><h2 class="section-title">الأكثر مبيعًا</h2><p>العناوين التي وجدت طريقها إلى مكتبات أكبر عدد من القراء.</p></div><a class="link-arrow" href="{% url 'store:book_list' %}?sort=bestselling">عرض القائمة <i class="bi bi-arrow-left"></i></a></div>
+        <div class="book-grid">{% for book in bestsellers %}{% include 'store/_book_card.html' with book=book %}{% endfor %}</div>
+    </div>
+</section>
+{% endif %}
+
+<section class="section-pad bg-brand">
+    <div class="container">
+        <div class="info-page-grid">
+            <div>
+                <span class="eyebrow light">صناعة الكتاب</span>
+                <h2 class="section-title">الجودة ليست غلافًا جميلًا فقط</h2>
+                <p class="mt-3 text-white-50">نبدأ من دقة المحتوى، ثم تحرير واضح، وتصميم يسهل القراءة، وطباعة تعيش طويلًا. كل تفصيلة تُراجع لأن القارئ يستحق كتابًا مكتملًا.</p>
+                <div class="value-grid mt-4">
+                    <div class="value-card bg-transparent border-secondary"><i class="bi bi-check2-circle"></i><h3 class="text-white">مراجعة متخصصة</h3><p class="text-white-50">تحرير لغوي وموضوعي.</p></div>
+                    <div class="value-card bg-transparent border-secondary"><i class="bi bi-palette"></i><h3 class="text-white">تصميم أصيل</h3><p class="text-white-50">هوية تناسب كل كتاب.</p></div>
+                    <div class="value-card bg-transparent border-secondary"><i class="bi bi-globe2"></i><h3 class="text-white">وصول أوسع</h3><p class="text-white-50">ورقي ورقمي وتوزيع مرن.</p></div>
+                </div>
+            </div>
+            <div class="info-visual"><img src="{% static 'images/publishing-craft.jpg' %}" alt="مراحل صناعة كتاب باحتراف" loading="lazy"></div>
+        </div>
+    </div>
+</section>
+
+{% if posts %}
+<section class="section-pad">
+    <div class="container">
+        <div class="section-heading"><div><span class="eyebrow">مجلة دار مصر</span><h2 class="section-title">أفكار وراء الكتب</h2><p>قراءات ومقالات وحوارات تساعدك على اكتشاف ما يستحق وقتك.</p></div><a class="link-arrow" href="{% url 'store:blog_list' %}">اقرأ المزيد <i class="bi bi-arrow-left"></i></a></div>
+        <div class="content-grid">
+            {% for post in posts %}
+            <article class="article-card"><a class="article-image" href="{{ post.get_absolute_url }}">{% if post.image %}<img src="{{ post.image.url }}" alt="{{ post.title }}" loading="lazy">{% else %}<img src="{% static 'images/publishing-craft.jpg' %}" alt="" loading="lazy">{% endif %}</a><div class="article-body"><div class="article-meta"><span>{{ post.category }}</span><span>{{ post.published_at|date:'j F Y' }}</span></div><a href="{{ post.get_absolute_url }}"><h3>{{ post.title }}</h3></a><p>{{ post.excerpt }}</p><a class="link-arrow" href="{{ post.get_absolute_url }}">اقرأ المقال <i class="bi bi-arrow-left"></i></a></div></article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if events %}
+<section class="section-pad-sm bg-cream">
+    <div class="container">
+        <div class="section-heading"><div><span class="eyebrow">قريبًا</span><h2 class="section-title">فعاليات ولقاءات</h2></div><a class="link-arrow" href="{% url 'store:event_list' %}">كل الفعاليات <i class="bi bi-arrow-left"></i></a></div>
+        <div class="d-grid gap-3">
+            {% for event in events %}<article class="event-card"><div class="event-date"><strong>{{ event.starts_at|date:'d' }}</strong><span>{{ event.starts_at|date:'F' }}</span></div><div><h3 class="h6 mb-1">{{ event.title }}</h3><p class="text-muted-custom mb-0"><i class="bi bi-geo-alt ms-1"></i>{{ event.venue }} · {{ event.starts_at|date:'g:i A' }}</p></div><a class="btn btn-outline-brand" href="{{ event.get_absolute_url }}">التفاصيل</a></article>{% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}تم استلام طلبك | {{ site_settings.site_name }}{% endblock %}
+
+{% block content %}
+<section class="section-pad bg-cream">
+    <div class="container">
+        <div class="order-success-card">
+            <div class="success-icon"><i class="bi bi-check2"></i></div>
+            <span class="eyebrow">تم استلام طلبك</span>
+            <h1 class="section-title">شكرًا لك، بدأنا مراجعة الطلب</h1>
+            <p class="text-muted-custom mt-3">سنرسل تحديثات الطلب إلى <strong>{{ order.email }}</strong>، وسيتواصل الفريق عند الحاجة لتأكيد الدفع أو الشحن.</p>
+            <p class="mt-4 mb-2">رقم الطلب</p><span class="order-number">{{ order.order_number }}</span>
+            <div class="row g-3 text-start mt-4">
+                <div class="col-md-4"><div class="p-3 bg-light rounded-3 h-100"><small class="text-muted-custom d-block">حالة الطلب</small><strong>{{ order.get_status_display }}</strong></div></div>
+                <div class="col-md-4"><div class="p-3 bg-light rounded-3 h-100"><small class="text-muted-custom d-block">طريقة الدفع</small><strong>{{ order.get_payment_method_display }}</strong></div></div>
+                <div class="col-md-4"><div class="p-3 bg-light rounded-3 h-100"><small class="text-muted-custom d-block">الإجمالي</small><strong>{{ order.total|floatformat:0 }} ج.م</strong></div></div>
+            </div>
+            <div class="text-start mt-4 p-3 border rounded-3">
+                {% for item in order.items.all %}<div class="d-flex justify-content-between gap-3 py-2 {% if not forloop.last %}border-bottom{% endif %}"><span>{{ item.title }} <small class="text-muted">({{ item.get_book_format_display }} × {{ item.quantity }})</small></span><strong class="text-nowrap">{{ item.line_total|floatformat:0 }} ج.م</strong></div>{% endfor %}
+            </div>
+            <div class="d-flex flex-wrap justify-content-center gap-2 mt-4">
+                {% if request.user.is_authenticated %}<a class="btn btn-brand" href="{% url 'store:order_detail' order.order_number %}">متابعة الطلب</a>{% endif %}
+                <a class="btn btn-soft" href="{% url 'store:book_list' %}">العودة إلى المكتبة</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

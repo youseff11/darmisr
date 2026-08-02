@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ author.name }} | مؤلفو {{ site_settings.site_name }}{% endblock %}
+{% block meta_description %}تعرف إلى {{ author.name }} وتصفح إصداراته المتاحة في {{ site_settings.site_name }}.{% endblock %}
+
+{% block content %}
+<section class="page-hero"><div class="container"><nav aria-label="مسار الصفحة"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="{% url 'store:home' %}">الرئيسية</a></li><li class="breadcrumb-item active">المؤلفون</li></ol></nav><div class="d-flex flex-column flex-md-row align-items-md-center gap-4"><div class="author-avatar m-0" style="width:130px;height:130px">{% if author.photo %}<img src="{{ author.photo.url }}" alt="{{ author.name }}">{% else %}<span class="author-avatar-placeholder"><i class="bi bi-person"></i></span>{% endif %}</div><div><span class="eyebrow light">أحد أصوات الدار</span><h1 class="display-title fs-2">{{ author.name }}</h1><p class="mb-0">{{ author.nationality|default:'كاتب وباحث' }} · {{ books.count }} إصدار</p>{% if author.website %}<a class="btn btn-outline-light btn-sm mt-3" href="{{ author.website }}" target="_blank" rel="noopener">الموقع الشخصي <i class="bi bi-box-arrow-up-left me-1"></i></a>{% endif %}</div></div></div></section>
+{% if author.bio %}<section class="section-pad-sm"><div class="container"><div class="prose mx-auto" style="max-width:850px"><span class="eyebrow">نبذة</span>{{ author.bio|linebreaks }}</div></div></section>{% endif %}
+<section class="section-pad bg-cream"><div class="container"><div class="section-heading"><div><span class="eyebrow">إصدارات المؤلف</span><h2 class="section-title">كتب {{ author.name }}</h2></div></div>{% if books %}<div class="book-grid">{% for book in books %}{% include 'store/_book_card.html' with book=book %}{% endfor %}</div>{% else %}<div class="empty-state"><i class="bi bi-book"></i><h3 class="h6">لا توجد إصدارات متاحة حاليًا</h3></div>{% endif %}</div></section>
+{% endblock %}
