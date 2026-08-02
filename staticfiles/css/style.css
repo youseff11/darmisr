@@ -193,6 +193,18 @@ html[data-theme="dark"] .site-search .form-control:focus {
     color: var(--brand-3);
 }
 
+
+/* لون أيقونات الهيدر في الوضع الداكن */
+html[data-theme="dark"] .header-action,
+html[data-theme="dark"] .header-action i,
+html[data-theme="dark"] .theme-toggle,
+html[data-theme="dark"] .theme-toggle i,
+html[data-theme="dark"] .menu-toggle,
+html[data-theme="dark"] .menu-toggle i,
+html[data-theme="dark"] .brand-copy strong {
+    color: #ffffff !important;
+}
+
 .account-menu { min-width: 220px; border: 1px solid var(--line); border-radius: 15px; box-shadow: var(--shadow-sm); background: var(--paper); transition: background-color 0.3s ease, border-color 0.3s ease; }
 .account-menu .dropdown-item { border-radius: 9px; padding: .58rem .7rem; color: var(--ink); transition: background-color 0.3s ease, color 0.3s ease; }
 .account-menu .dropdown-item:hover { color: var(--brand); background: var(--cream); }
