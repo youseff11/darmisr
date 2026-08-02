@@ -193,6 +193,7 @@ html[data-theme="dark"] .site-search .form-control:focus {
     color: var(--brand-3);
 }
 
+
 /* لون أيقونات الهيدر في الوضع الداكن */
 html[data-theme="dark"] .header-action,
 html[data-theme="dark"] .header-action i,
